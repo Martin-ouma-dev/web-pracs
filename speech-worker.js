@@ -5,9 +5,9 @@ env.allowRemoteModels = true;
 env.useBrowserCache = true;
 
 let transcriberPromise;
+let requestQueue = Promise.resolve();
 
-self.addEventListener("message", async ({ data }) => {
-    const { id, audio } = data;
+async function transcribe({ id, audio }) {
     try {
         if (!transcriberPromise) {
             transcriberPromise = pipeline(
@@ -38,4 +38,8 @@ self.addEventListener("message", async ({ data }) => {
             message: error.message || String(error)
         });
     }
+}
+
+self.addEventListener("message", ({ data }) => {
+    requestQueue = requestQueue.then(() => transcribe(data));
 });

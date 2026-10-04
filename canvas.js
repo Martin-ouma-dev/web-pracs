@@ -51,7 +51,10 @@ window.addEventListener("load", ()=>{
     let speechRecorder = null;
     let speechStream = null;
     let speechChunks = [];
+    let speechQueue = [];
+    let speechSegmentTimer = null;
     let speechActive = false;
+    let speechStopRequested = false;
     let speechStarting = false;
     let speechTranscribing = false;
 
@@ -377,6 +380,9 @@ window.addEventListener("load", ()=>{
         speechRequestVersion++;
         speechStarting = false;
         speechTranscribing = false;
+        speechQueue = [];
+        window.clearInterval(speechSegmentTimer);
+        speechSegmentTimer = null;
         speechButton.disabled = false;
         setSpeechActive(false);
         if (speechRecorder && speechRecorder.state !== "inactive") {
@@ -420,35 +426,52 @@ window.addEventListener("load", ()=>{
             }
 
             speechTranscribing = false;
-            speechButton.disabled = false;
-            setSpeechActive(false);
             if (type === "result") {
                 if (text) {
                     appendSpeechText(text);
-                    speechStatus.textContent = "Speech transcribed on this device. Review or edit the text.";
-                } else {
+                    speechStatus.textContent = speechActive
+                        ? "Listening… recognized speech is appearing in the text box."
+                        : "Speech transcribed on this device. Review or edit the text.";
+                } else if (!speechActive) {
                     speechStatus.textContent = "No speech detected. Try recording again.";
                 }
             } else {
                 speechStatus.textContent = `Speech transcription failed: ${message}`;
                 console.error("Offline speech transcription failed:", message);
             }
+            processSpeechQueue();
+            speechButton.disabled = speechTranscribing || speechQueue.length > 0;
+            if (!speechActive && !speechTranscribing && speechQueue.length === 0
+                && type === "result" && text) {
+                speechStatus.textContent = "Speech transcribed on this device. Review or edit the text.";
+            }
         });
         speechWorker.addEventListener("error", event => {
             speechTranscribing = false;
-            speechButton.disabled = false;
-            setSpeechActive(false);
             speechStatus.textContent = `Offline speech recognition could not start: ${event.message}`;
             speechWorker = null;
             console.error("Offline speech worker failed:", event.message);
+            processSpeechQueue();
+            speechButton.disabled = speechTranscribing || speechQueue.length > 0;
         });
         return speechWorker;
+    }
+
+    function processSpeechQueue() {
+        if (speechTranscribing || speechQueue.length === 0) return;
+        const { blob, version } = speechQueue.shift();
+        if (version !== speechRequestVersion) {
+            processSpeechQueue();
+            return;
+        }
+        speechTranscribing = true;
+        transcribeSpeechRecording(blob, version);
     }
 
     async function transcribeSpeechRecording(blob, version) {
         let audioContext;
         try {
-            speechStatus.textContent = "Preparing recorded audio for offline transcription…";
+            if (!speechActive) speechStatus.textContent = "Preparing recorded speech…";
             const AudioContextClass = window.AudioContext || window.webkitAudioContext;
             if (!AudioContextClass) {
                 throw new Error("This browser does not support audio processing.");
@@ -476,9 +499,9 @@ window.addEventListener("load", ()=>{
             audioContext = null;
             if (version !== speechRequestVersion) return;
 
-            speechStatus.textContent = "Transcribing speech on this device. First use downloads the model; later use can use the browser cache.";
-            speechTranscribing = true;
-            speechButton.disabled = true;
+            speechStatus.textContent = speechActive && !speechStopRequested
+                ? "Listening… transcribing recent speech on this device."
+                : "Transcribing the final speech segment on this device.";
             const id = ++speechWorkerRequestId;
             speechWorkerVersion = version;
             getSpeechWorker().postMessage({ id, audio: mono.buffer }, [mono.buffer]);
@@ -488,11 +511,52 @@ window.addEventListener("load", ()=>{
             }
             if (version !== speechRequestVersion) return;
             speechTranscribing = false;
-            speechButton.disabled = false;
-            setSpeechActive(false);
             speechStatus.textContent = `Could not process the recording: ${error.message}`;
             console.error("Could not process recorded speech:", error);
+            processSpeechQueue();
+            speechButton.disabled = speechTranscribing || speechQueue.length > 0;
         }
+    }
+
+    function startSpeechSegment(version) {
+        if (!speechStream || version !== speechRequestVersion) return;
+        speechChunks = [];
+        speechRecorder = new MediaRecorder(speechStream);
+        speechRecorder.addEventListener("dataavailable", event => {
+            if (event.data.size > 0) speechChunks.push(event.data);
+        });
+        speechRecorder.addEventListener("error", event => {
+            speechStatus.textContent = `Audio recording failed: ${event.error?.message || "unknown recorder error"}`;
+            console.error("Audio recording failed:", event.error);
+        });
+        speechRecorder.addEventListener("stop", () => {
+            const recording = new Blob(speechChunks, { type: speechChunks[0]?.type || "audio/webm" });
+            speechChunks = [];
+            speechRecorder = null;
+
+            if (version === speechRequestVersion && recording.size > 0) {
+                speechQueue.push({ blob: recording, version });
+                processSpeechQueue();
+            }
+
+            if (speechActive && !speechStopRequested && version === speechRequestVersion) {
+                startSpeechSegment(version);
+                speechStatus.textContent = speechTranscribing
+                    ? "Listening… transcribing recent speech on this device."
+                    : "Listening… recognized speech will appear in the text box shortly.";
+                return;
+            }
+
+            speechActive = false;
+            speechStopRequested = false;
+            window.clearInterval(speechSegmentTimer);
+            speechSegmentTimer = null;
+            speechStream?.getTracks().forEach(track => track.stop());
+            speechStream = null;
+            speechButton.disabled = speechTranscribing || speechQueue.length > 0;
+            setSpeechActive(false);
+        });
+        speechRecorder.start();
     }
 
     function startVoiceTyping() {
@@ -514,42 +578,24 @@ window.addEventListener("load", ()=>{
 
             speechStarting = false;
             speechButton.disabled = false;
-            speechButtonLabel.textContent = "Record speech";
             speechStream = stream;
-            speechChunks = [];
-            speechRecorder = new MediaRecorder(stream);
-            speechRecorder.addEventListener("dataavailable", event => {
-                if (event.data.size > 0) speechChunks.push(event.data);
-            });
-            speechRecorder.addEventListener("error", event => {
-                speechStatus.textContent = `Audio recording failed: ${event.error?.message || "unknown recorder error"}`;
-                console.error("Audio recording failed:", event.error);
-            });
-            speechRecorder.addEventListener("stop", () => {
-                speechStream?.getTracks().forEach(track => track.stop());
-                speechStream = null;
-                speechRecorder = null;
-                speechActive = false;
-                setSpeechActive(false);
-                const recording = new Blob(speechChunks, { type: speechChunks[0]?.type || "audio/webm" });
-                speechChunks = [];
-                if (version === speechRequestVersion && recording.size > 0) {
-                    speechStatus.textContent = "Recording complete. Starting offline transcription…";
-                    transcribeSpeechRecording(recording, version);
-                } else if (version === speechRequestVersion) {
-                    speechStatus.textContent = "The recording was empty. Check your microphone and try again.";
-                }
-            });
-
             try {
-                speechRecorder.start();
+                speechActive = true;
+                speechStopRequested = false;
+                startSpeechSegment(version);
+                speechSegmentTimer = window.setInterval(() => {
+                    if (speechRecorder?.state === "recording") {
+                        speechRecorder.stop();
+                    }
+                }, 4000);
                 speechActive = true;
                 setSpeechActive(true);
-                speechStatus.textContent = "Recording… click Stop recording when you finish speaking.";
+                speechStatus.textContent = "Listening… speech will appear in the text box as it is recognized.";
             } catch (error) {
                 stream.getTracks().forEach(track => track.stop());
                 speechStream = null;
                 speechRecorder = null;
+                speechActive = false;
                 setSpeechActive(false);
                 speechStatus.textContent = `Could not start recording: ${error.message}`;
                 console.error("Could not start audio recording:", error);
@@ -591,13 +637,17 @@ window.addEventListener("load", ()=>{
     recognizedText.addEventListener("input", () => {
         updateTranscriptDisplay();
         updateUndoButton();
-        if (speechActive || speechTranscribing) {
+        if (speechActive || speechStarting || speechTranscribing) {
             cancelVoiceInput("Voice recording stopped so your manual edit is kept.");
         }
     });
     speechButton.addEventListener("click", () => {
         if (speechActive) {
             if (speechRecorder && speechRecorder.state !== "inactive") {
+                speechStopRequested = true;
+                window.clearInterval(speechSegmentTimer);
+                speechSegmentTimer = null;
+                speechStatus.textContent = "Finishing the current speech segment…";
                 speechRecorder.stop();
             }
         } else if (!speechStarting && !speechTranscribing) {
