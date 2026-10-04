@@ -373,7 +373,7 @@ window.addEventListener("load", ()=>{
     function setSpeechActive(active) {
         speechActive = active;
         speechButton.setAttribute("aria-pressed", String(active));
-        speechButtonLabel.textContent = active ? "Stop recording" : "Record speech";
+        speechButtonLabel.textContent = active ? "Stop voice typing" : "Voice type";
     }
 
     function cancelVoiceInput(statusMessage) {
@@ -587,10 +587,10 @@ window.addEventListener("load", ()=>{
                     if (speechRecorder?.state === "recording") {
                         speechRecorder.stop();
                     }
-                }, 4000);
+                }, 2000);
                 speechActive = true;
                 setSpeechActive(true);
-                speechStatus.textContent = "Listening… speech will appear in the text box as it is recognized.";
+                speechStatus.textContent = "Listening… new speech is transcribed into the text box about every 2 seconds.";
             } catch (error) {
                 stream.getTracks().forEach(track => track.stop());
                 speechStream = null;
