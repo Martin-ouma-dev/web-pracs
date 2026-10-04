@@ -150,6 +150,61 @@ body {
     font: 13px sans-serif;
 }
 
+.toolbar-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.55rem 0.8rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.6rem;
+    background: #fff;
+    color: #344054;
+    font: 600 14px/1 sans-serif;
+    cursor: pointer;
+    transition: background-color 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+.toolbar-action:hover {
+    border-color: #98a2b3;
+    background: #f8fafc;
+}
+
+.toolbar-action:active {
+    transform: translateY(1px);
+}
+
+.toolbar-action:focus-visible {
+    outline: 3px solid #84caff;
+    outline-offset: 2px;
+}
+
+.toolbar-action:disabled {
+    color: #98a2b3;
+    cursor: not-allowed;
+}
+
+.toolbar-action[aria-pressed="true"] {
+    border-color: #fda29b;
+    background: #fff4f2;
+    color: #b42318;
+}
+
+.toolbar-action svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+}
+
+#speech-status {
+    color: #667085;
+    font-size: 12px;
+}
+
 #undo {
     display: inline-flex;
     align-items: center;

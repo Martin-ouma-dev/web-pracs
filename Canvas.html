@@ -31,6 +31,14 @@
                 <option value="numbers">Numbers</option>
             </select>
         </label>
+        <button id="speech-input" class="toolbar-action" type="button" aria-pressed="false" title="Record English speech and transcribe it on this device">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="9" y="2" width="6" height="12" rx="3"></rect>
+                <path d="M5 11a7 7 0 0 0 14 0M12 18v4m-4 0h8"></path>
+            </svg>
+            <span>Record speech</span>
+        </button>
+        <span id="speech-status" role="status" aria-live="polite">English speech is transcribed on this device; first use downloads the model and requires internet.</span>
         <button id="undo" type="button" disabled>
             <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M9 14 4 9l5-5"></path>
@@ -51,7 +59,7 @@
                 <textarea id="recognized-text" placeholder="Your transcribed writing will appear here." spellcheck="false" aria-label="Transcribed text; editable for manual corrections"></textarea>
             </section>
         </div>
-        <p id="recognition-status" role="status" aria-live="polite">Write a line; it becomes text after a short pause. Choose Text or Numbers for clearer recognition. Transcription does not rewrite words using sentence context.</p>
+        <p id="recognition-status" role="status" aria-live="polite">Write one line at a time. Handwriting recognition runs on this device; first use downloads a roughly 160 MB model.</p>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="canvas.js"></script>
