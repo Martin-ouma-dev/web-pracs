@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas</title>
+    <link rel="stylesheet" href="canvas.css">
+</head>
+<body>
+    <div class="toolbar" role="toolbar" aria-label="Drawing tools">
+        <span class="toolbar-label">Pencil:</span>
+        <button class="color-button" type="button" data-color="#000000" aria-label="Black" aria-pressed="true" style="--pencil-color: #000000"><span class="pencil-icon" aria-hidden="true"></span></button>
+        <button class="color-button" type="button" data-color="#e53935" aria-label="Red" aria-pressed="false" style="--pencil-color: #e53935"><span class="pencil-icon" aria-hidden="true"></span></button>
+        <button class="color-button" type="button" data-color="#1e88e5" aria-label="Blue" aria-pressed="false" style="--pencil-color: #1e88e5"><span class="pencil-icon" aria-hidden="true"></span></button>
+        <button class="color-button" type="button" data-color="#43a047" aria-label="Green" aria-pressed="false" style="--pencil-color: #43a047"><span class="pencil-icon" aria-hidden="true"></span></button>
+        <button class="color-button" type="button" data-color="#fdd835" aria-label="Yellow" aria-pressed="false" style="--pencil-color: #fdd835"><span class="pencil-icon" aria-hidden="true"></span></button>
+        <label class="custom-color-button" title="Choose a custom pencil color">
+            <span class="pencil-icon" aria-hidden="true" style="--pencil-color: #000000"></span>
+            <input id="custom-color" type="color" value="#000000" aria-label="Choose a custom color">
+        </label>
+        <label class="size-control" for="brush-size">
+            <span>Tip</span>
+            <input id="brush-size" type="range" min="5" max="16" value="9" aria-label="Pencil thickness">
+            <output id="brush-size-value" for="brush-size">9 px</output>
+        </label>
+        <label class="recognition-mode" for="recognition-mode">
+            <span>Read as</span>
+            <select id="recognition-mode">
+                <option value="mixed">Text + numbers</option>
+                <option value="text">Text</option>
+                <option value="numbers">Numbers</option>
+            </select>
+        </label>
+        <button id="undo" type="button" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 14 4 9l5-5"></path>
+                <path d="M4 9h9a7 7 0 1 1 0 14h-2"></path>
+            </svg>
+            Undo
+        </button>
+        <button id="clear" type="button" disabled>Clear</button>
+    </div>
+    <main class="writing-area">
+        <div class="writing-stage">
+            <canvas id="Canvas" aria-label="Write here with your mouse, finger, or stylus">Your browser does not support the canvas element.</canvas>
+            <section id="recognized-display" aria-labelledby="recognized-label" hidden>
+                <div class="recognized-heading">
+                    <label id="recognized-label" for="recognized-text">Recognized text</label>
+                    <span>Keep writing above to add another line.</span>
+                </div>
+                <textarea id="recognized-text" placeholder="Your transcribed writing will appear here." spellcheck="false" aria-label="Transcribed text; editable for manual corrections"></textarea>
+            </section>
+        </div>
+        <p id="recognition-status" role="status" aria-live="polite">Write a line; it becomes text after a short pause. Choose Text or Numbers for clearer recognition. Transcription does not rewrite words using sentence context.</p>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="canvas.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,330 @@
+html,
+body {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+body {
+    font-family: sans-serif;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 0.65rem 1rem;
+    background: #f4f6f8;
+    border-bottom: 1px solid #d9dee5;
+    color: #344054;
+    font: 14px/1.4 sans-serif;
+}
+
+.toolbar-label {
+    font-weight: 600;
+}
+
+.color-button {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 0.65rem;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+.color-button:hover,
+.custom-color-button:hover {
+    background: #e8edf3;
+}
+
+.color-button[aria-pressed="true"],
+.custom-color-button:focus-within {
+    border-color: #98a2b3;
+    background: #fff;
+    box-shadow: 0 1px 3px #1018281a;
+}
+
+.color-button:active,
+#undo:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.color-button:focus-visible,
+.custom-color-button:focus-within,
+#undo:focus-visible {
+    outline: 3px solid #84caff;
+    outline-offset: 2px;
+}
+
+.pencil-icon {
+    position: relative;
+    display: block;
+    width: 0.65rem;
+    height: 1.8rem;
+    transform: rotate(42deg);
+    clip-path: polygon(50% 0, 100% 12%, 100% 82%, 50% 100%, 0 82%, 0 12%);
+    background: linear-gradient(
+        to bottom,
+        #d88989 0 8%,
+        #c6cbd2 8% 15%,
+        var(--pencil-color) 15% 78%,
+        #d8b27a 78% 92%,
+        #344054 92% 100%
+    );
+    filter: drop-shadow(0 1px 1px #10182840);
+}
+
+.custom-color-button {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid transparent;
+    border-radius: 0.65rem;
+    cursor: pointer;
+}
+
+.custom-color-button input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.size-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-left: 0.3rem;
+    white-space: nowrap;
+}
+
+.size-control input {
+    width: 5rem;
+    accent-color: #344054;
+}
+
+.size-control output {
+    min-width: 2.5rem;
+    color: #667085;
+    font-variant-numeric: tabular-nums;
+}
+
+.recognition-mode {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+}
+
+.recognition-mode select {
+    max-width: 9rem;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.45rem;
+    background: #fff;
+    color: #344054;
+    font: 13px sans-serif;
+}
+
+#undo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    margin-left: auto;
+    padding: 0.55rem 0.9rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.6rem;
+    background: #fff;
+    color: #344054;
+    box-shadow: 0 1px 2px #1018280d;
+    font: 600 14px/1 sans-serif;
+    cursor: pointer;
+    transition: background-color 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+#clear {
+    padding: 0.55rem 0.8rem;
+    border: 1px solid transparent;
+    border-radius: 0.6rem;
+    background: transparent;
+    color: #b42318;
+    font: 600 14px/1 sans-serif;
+    cursor: pointer;
+}
+
+#clear:hover:not(:disabled) {
+    background: #feeceb;
+}
+
+#clear:disabled {
+    color: #98a2b3;
+    cursor: not-allowed;
+}
+
+#undo:hover:not(:disabled) {
+    border-color: #98a2b3;
+    background: #f8fafc;
+}
+
+#undo:disabled {
+    color: #98a2b3;
+    background: #f1f3f5;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+#clear:focus-visible {
+    outline: 3px solid #fda29b;
+    outline-offset: 2px;
+}
+
+#undo svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+}
+
+canvas {
+    display: block;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+}
+
+.writing-stage.has-transcript #Canvas {
+    flex: 0 0 32%;
+    max-height: 15rem;
+    min-height: 10rem;
+    border-bottom: 1px solid #d9dee5;
+}
+
+.writing-area {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+}
+
+.writing-stage {
+    position: relative;
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+    overflow: auto;
+    background: #fff;
+}
+
+canvas[hidden] {
+    display: none;
+}
+
+#recognized-display {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: clamp(1rem, 3vw, 2rem);
+    background: repeating-linear-gradient(
+        to bottom,
+        #fff 0,
+        #fff 31px,
+        #e8edf3 32px
+    );
+}
+
+#recognized-display[hidden] {
+    display: none;
+}
+
+.recognized-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    color: #344054;
+}
+
+.recognized-heading label {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.recognized-heading span {
+    color: #667085;
+    font-size: 12px;
+}
+
+#recognized-text {
+    box-sizing: border-box;
+    flex: 1;
+    width: 100%;
+    min-height: 12rem;
+    resize: vertical;
+    padding: 0.6rem 0.75rem;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #101828;
+    font: 600 clamp(2rem, 4vw, 3rem)/1.5 sans-serif;
+    overflow-wrap: anywhere;
+}
+
+#recognized-text:focus-visible {
+    border-radius: 0.5rem;
+    outline: 3px solid #84caff;
+}
+
+.recognition-mode select:focus-visible {
+    outline: 3px solid #84caff;
+    outline-offset: 2px;
+}
+
+#recognition-status {
+    flex: none;
+    margin: 0;
+    padding: 0.6rem 1rem;
+    border-top: 1px solid #d9dee5;
+    background: #f8fafc;
+    color: #667085;
+    font: 13px/1.4 sans-serif;
+}
+
+
+@media (max-width: 520px) {
+    .toolbar {
+        gap: 0.35rem;
+        padding: 0.5rem;
+    }
+
+    .color-button,
+    .custom-color-button {
+        width: 2.2rem;
+        height: 2.2rem;
+    }
+
+    #recognized-display {
+        padding: 0.75rem;
+    }
+}
